@@ -1,6 +1,7 @@
 import fastify from 'fastify';
 import websocket from '@fastify/websocket';
 import { orderRoutes } from './routes/order.routes';
+import './queue/order.worker'; // Start Worker
 
 const server = fastify({ logger: true });
 
