@@ -2,10 +2,9 @@ import { FastifyInstance } from 'fastify';
 import { CreateOrderRequest } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { addOrderToQueue } from '../queue/order.queue';
-
 // import { SocketStream } from '@fastify/websocket';
-import { WebSocket } from 'ws'; // Keeping this for the Map type
-export const orderConnections = new Map<string, WebSocket>();
+import { WebSocket } from 'ws';
+import { orderConnections } from '../websocket.store';
 
 export async function orderRoutes(fastify: FastifyInstance) {
 
@@ -33,18 +32,38 @@ export async function orderRoutes(fastify: FastifyInstance) {
     });
 
     // WebSocket Endpoint: /ws/:orderId
+    // Note: depending on @fastify/websocket version, `connection` might be a SocketStream (with `.socket`)
+    // or directly a WebSocket-like object (with `.send` / `.on`).
     fastify.get('/ws/:orderId', { websocket: true }, (connection: any, req: any) => {
         const { orderId } = req.params;
         fastify.log.info(`Client connected for order ${orderId}`);
 
-        // Store raw WebSocket connection
-        orderConnections.set(orderId, connection.socket);
+        // Store WebSocket connection - try both connection.socket and connection itself
+        // Fastify WebSocket: connection.socket is the underlying WebSocket instance
+        const ws: any = connection?.socket ?? connection;
+        orderConnections.set(orderId, ws);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/b6057e4f-2fe8-43d7-a580-ca74c88cd245',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'C',location:'order.routes.ts:websocket:connect',message:'websocket stored',data:{orderId,connectionsCount:orderConnections.size,hasSocket:!!connection.socket,readyState:ws?.readyState},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
 
         // Send initial status
-        connection.socket.send(JSON.stringify({ orderId, status: 'pending', message: 'Connected to updates' }));
+        try {
+            ws.send(JSON.stringify({ orderId, status: 'pending', message: 'Connected to updates' }));
+        } catch (err: any) {
+            // Fastify logger expects (obj, msg) shape; avoid TS overload error.
+            fastify.log.error({ err }, `Failed to send initial message to ${orderId}`);
+        }
+
+        // Handle errors
+        ws.on('error', (err: any) => {
+            fastify.log.error({ err }, `WebSocket error for order ${orderId}`);
+            orderConnections.delete(orderId);
+        });
 
         // Cleanup on close
-        connection.socket.on('close', () => {
+        ws.on('close', () => {
+            fastify.log.info(`Client disconnected for order ${orderId}`);
             orderConnections.delete(orderId);
         });
     });

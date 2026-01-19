@@ -24,6 +24,12 @@ npm install
 npm run dev
 ```
 
+### Redis notes (Windows)
+- If you see `ECONNREFUSED 127.0.0.1:6379`, Redis is not running. This project will fall back to an in-memory queue, but BullMQ/Redis is required for full fidelity.
+- Start Redis only:
+  - PowerShell: `powershell -ExecutionPolicy Bypass -File scripts/start-redis.ps1`
+  - Or: `docker-compose up -d redis`
+
 ### 3. Documentation
 - [Architecture & Flow](docs/architecture.md) - How the Queue and Worker work.
 - [API Reference](docs/api.md) - `POST /execute` and WebSocket events.
