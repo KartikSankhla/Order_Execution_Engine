@@ -3,10 +3,8 @@ import { CreateOrderRequest } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { addOrderToQueue } from '../queue/order.queue';
 
-import { SocketStream } from '@fastify/websocket';
-// In-memory store for active WebSocket connections (mapped by orderId)
-// Storing the actual WebSocket object
-import { WebSocket } from 'ws';
+// import { SocketStream } from '@fastify/websocket';
+import { WebSocket } from 'ws'; // Keeping this for the Map type
 export const orderConnections = new Map<string, WebSocket>();
 
 export async function orderRoutes(fastify: FastifyInstance) {
@@ -35,7 +33,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
     });
 
     // WebSocket Endpoint: /ws/:orderId
-    fastify.get('/ws/:orderId', { websocket: true }, (connection: SocketStream, req: any) => {
+    fastify.get('/ws/:orderId', { websocket: true }, (connection: any, req: any) => {
         const { orderId } = req.params;
         fastify.log.info(`Client connected for order ${orderId}`);
 
