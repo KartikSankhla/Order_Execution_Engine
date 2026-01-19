@@ -1,9 +1,17 @@
 import fastify from 'fastify';
+import websocket from '@fastify/websocket';
+import { orderRoutes } from './routes/order.routes';
 
 const server = fastify({ logger: true });
 
+// Register WebSocket support
+server.register(websocket);
+
+// Register Routes
+server.register(orderRoutes, { prefix: '/api/orders' });
+
 server.get('/', async (request, reply) => {
-    return { hello: 'world' };
+    return { status: 'online', service: 'Order Execution Engine' };
 });
 
 const start = async () => {
