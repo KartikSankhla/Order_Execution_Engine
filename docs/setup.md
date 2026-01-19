@@ -24,3 +24,11 @@
 
 4.  **Verify**
     Server should start on `http://localhost:3000`.
+
+## 5. View Demo
+Run the simulation script to see orders being processed and real-time WebSocket updates:
+```bash
+# In a new terminal
+npx ts-node scripts/demo.ts
+```
+
