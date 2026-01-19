@@ -20,7 +20,7 @@ The demo showcases:
 
 ## 🌐 Live Deployment
 
-**Public URL**: `https://your-app.onrender.com` *(Coming soon)*
+**Public URL**: https://order-execution-engine-xazw.onrender.com
 
 The application is deployed on Render's free tier with Redis addon for production-grade queue management.
 
@@ -190,8 +190,22 @@ See **[docs/setup.md](docs/setup.md)** for detailed deployment instructions.
 
 ### Submit an Order
 
+**Local:**
 ```bash
 curl -X POST http://localhost:3000/api/orders/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "MARKET",
+    "side": "buy",
+    "inputToken": "SOL",
+    "outputToken": "USDC",
+    "amount": 10
+  }'
+```
+
+**Production:**
+```bash
+curl -X POST https://order-execution-engine-xazw.onrender.com/api/orders/execute \
   -H "Content-Type: application/json" \
   -d '{
     "type": "MARKET",
